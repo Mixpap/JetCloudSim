@@ -25,7 +25,10 @@ void ChangeOutputVar ()
  *************************************************************** */
 { 
   Image *image;
-
+SetOutputVar("rho", PPM_OUTPUT, YES);
+  image = GetImage ("rho");
+  image->logscale = 1
+image->colormap = "red";
 #ifdef PARTICLES
   //SetOutputVar ("energy",PARTICLES_FLT_OUTPUT, NO);
 //  SetOutputVar ("x1",    PARTICLES_FLT_OUTPUT, NO);
