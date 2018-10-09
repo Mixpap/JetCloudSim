@@ -9,7 +9,7 @@
 
   \author A. Mignone (mignone@ph.unito.it)
   \date   Sept 10, 2012
-  
+
   * Edited for Molecular Cloud Cooling/ Jet interaction *
     		Version 1.0 (7/3)
 */
@@ -46,7 +46,7 @@ void Init (double *v, double x1, double x2, double x3)
 {
   g_gamma=5.0/3.0;
 
-  v[RHO] = 1.0;
+  v[RHO] = g_inputParam[rho_ism];
   v[VX1] = 0.0;
   v[VX2] = 0.0;
   v[VX3] = 0.0;
@@ -54,17 +54,39 @@ void Init (double *v, double x1, double x2, double x3)
    v[PRS] = g_inputParam[pressure_gas];
   #endif
   v[TRC] = 0.0;
-  double rs;
+
+  /* one cloud */
+  double rs,A,B;
+  A=10.0;
+  B=0.002;
+  
   rs=sqrt(x1*x1+x2*x2);
   if (rs<g_inputParam[radius_cloud]) {
+  	// Plummer Profile
+  	v[RHO]=A/(B+pow(rs,2.3));
+  }
+  
 
-	/* Power Law -1.3 Profile */
-	v[RHO]=g_inputParam[pl_rho1]*pow(rs,-1.3);
-	/* Box Profile 
-	v[RHO]=g_inputParam[rho_cloud];
-	*/
- }
+	  /* Multiple Clouds (experimental) 
+	  int nn;
+	  double x1c, x2c,x1_min,x2_min,x1_max,x2_max;
+	  x1_min=-3.0;
+	  x1_max=3.0;
+	  x2_min=-3.0;
+	  x2_max=3.0;
 
+	  //for (nn=1; nn<2; nn=nn+1) {
+		
+	  	x1c=(x1_max-x1_min)*(float)rand()/RAND_MAX+x1_min;
+	  	x2c=(x2_max-x2_min)*(float)rand()/RAND_MAX+x2_min;
+	        //printf("%d %f %f\n",nn,x1c,x2c );
+	        rs=sqrt((x1-x1c)*(x1-x1c)+(x2-x2c)*(x2-x2c));
+	  	if (rs<g_inputParam[radius_cloud]) {
+			   // Plummer Profile
+  			v[RHO]=A/(B+pow(rs,1.3));
+		  }
+	  //}
+	  */
   #if PHYSICS == MHD || PHYSICS == RMHD
 
    v[BX1] = 0.0;
@@ -80,7 +102,7 @@ void Init (double *v, double x1, double x2, double x3)
 
 /* ********************************************************************* */
 void InitDomain (Data *d, Grid *grid)
-/*! 
+/*!
  * Assign initial condition by looping over the computational domain.
  * Called after the usual Init() function to assign initial conditions
  * on primitive variables.
@@ -149,9 +171,13 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   int   i, j, k, nv;
   double  *x1, *x2, *x3;
 
-  x1 = grid[IDIR].x;
-  x2 = grid[JDIR].x;
-  x3 = grid[KDIR].x;
+  //x1 = grid[IDIR].x;
+  //x2 = grid[JDIR].x;
+  //x3 = grid[KDIR].x;
+
+  x1 = grid->xgc[IDIR];  /* -- array pointer to x1 coordinate -- */
+  x2 = grid->xgc[JDIR];  /* -- array pointer to x2 coordinate -- */
+  x3 = grid->xgc[KDIR];  /* -- array pointer to x3 coordinate -- */
 
   if (side == 0) {    /* -- check solution inside domain -- */
     DOM_LOOP(k,j,i){};
@@ -159,9 +185,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 
   if (side == X1_BEG){  /* -- X1_BEG boundary -- */
     if (box->vpos == CENTER) {
-      BOX_LOOP(box,k,j,i){
-
-      }
+      BOX_LOOP(box,k,j,i){ }
     }else if (box->vpos == X1FACE){
       BOX_LOOP(box,k,j,i){  }
     }else if (box->vpos == X2FACE){
@@ -186,32 +210,36 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   if (side == X2_BEG){  /* -- X2_BEG boundary -- */
     if (box->vpos == CENTER) {
       BOX_LOOP(box,k,j,i){
-
+	//printf("%f %f \n",x1[i],x2[j]);
 	if (g_inputParam[gJET]==1) {
-        /* INITIATE JET */	
-          // Boundary conditions all over
-          d->Vc[VX1][k][j][i] = d->Vc[VX1][k][JBEG][i];
-          d->Vc[VX2][k][j][i] = d->Vc[VX2][k][JBEG][i];
-          d->Vc[PRS][k][j][i] = d->Vc[PRS][k][JBEG][i]; //g_inputParam[pressure_gas];
-          d->Vc[RHO][k][j][i] =  d->Vc[RHO][k][JBEG][i]; //g_inputParam[rho_ism];
-
-
           // Boundary conditions IN THE JET
-          if ( fabs(x1[i])<0.25 )   {
+          if (fabs(x1[i])<=g_inputParam[jet_window]) {
+          //if ((i<129) && (i>127)) {    
               d->Vc[RHO][k][j][i] = g_inputParam[rho_jet];
               d->Vc[PRS][k][j][i] = g_inputParam[pressure_jet];
               d->Vc[VX1][k][j][i] = 0.0;
               d->Vc[VX2][k][j][i] = sqrt(1.0-(1.0/(g_inputParam[lorentz_jet]*g_inputParam[lorentz_jet])));
-	/*End Jet */
-          }else {
-		  d->Vc[VX1][k][j][i] = d->Vc[VX1][k][JBEG][i];
-		  d->Vc[VX2][k][j][i] = d->Vc[VX2][k][JBEG][i];
-		  d->Vc[PRS][k][j][i] = d->Vc[PRS][k][JBEG][i]; //g_inputParam[pressure_gas];
-		  d->Vc[RHO][k][j][i] =  d->Vc[RHO][k][JBEG][i]; //g_inputParam[rho_ism];
-		}
-
+	  }else{
+	      VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
+	      //d->Vc[VX1][k][j][i] = d->Vc[VX1][k][JBEG][i];
+	      //d->Vc[VX2][k][j][i] = d->Vc[VX2][k][JBEG][i];
+	      //d->Vc[PRS][k][j][i] = d->Vc[PRS][k][JBEG][i]; //g_inputParam[pressure_gas];
+	      //d->Vc[RHO][k][j][i] = d->Vc[RHO][k][JBEG][i]; //g_inputParam[rho_ism];
+	  }
+	
+		//VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
+		//d->Vc[VX2][k][j][i] = 0.8*exp(-x1[i]*x1[i]/(2.*0.01*0.01));
+	
+	}else{
+	  d->Vc[VX1][k][j][i] = d->Vc[VX1][k][JBEG][i];
+	  d->Vc[VX2][k][j][i] = d->Vc[VX2][k][JBEG][i];
+	  d->Vc[PRS][k][j][i] = d->Vc[PRS][k][JBEG][i]; //g_inputParam[pressure_gas];
+	  d->Vc[RHO][k][j][i] = d->Vc[RHO][k][JBEG][i]; //g_inputParam[rho_ism];
 	}
-       }
+	
+      //printf("%f %f\n",x1[i],d->Vc[VX2][k][j][i]);
+      }
+     
     }else if (box->vpos == X1FACE){
       BOX_LOOP(box,k,j,i){  }
     }else if (box->vpos == X2FACE){
@@ -319,7 +347,7 @@ double BodyForcePotential(double x1, double x2, double x3)
 	}
 	else {
 	  M=A*pow(rs,1.7); //Power-Law Density Profile Integration
-	  //M=A*pow(rs,3); //Box Density Profile Integration	
+	  //M=A*pow(rs,3); //Box Density Profile Integration
 	  return -G*M/rs;
 	}
 }

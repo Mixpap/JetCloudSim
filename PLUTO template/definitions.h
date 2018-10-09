@@ -2,14 +2,14 @@
 #define  DIMENSIONS                     2
 #define  COMPONENTS                     2
 #define  GEOMETRY                       CARTESIAN
-#define  BODY_FORCE                     POTENTIAL
+#define  BODY_FORCE                     NO
 #define  FORCED_TURB                    NO
 #define  COOLING                        NO
 #define  RECONSTRUCTION                 LINEAR
 #define  TIME_STEPPING                  RK2
 #define  DIMENSIONAL_SPLITTING          NO
 #define  NTRACER                        0
-#define  USER_DEF_PARAMETERS            15
+#define  USER_DEF_PARAMETERS            9
 
 /* -- physics dependent declarations -- */
 
@@ -28,14 +28,8 @@
 #define  lorentz_jet                    4
 #define  pressure_gas                   5
 #define  pressure_jet                   6
-#define  x_HI_cloud                     7
-#define  x_HI_ism                       8
-#define  x_HII_cloud                    9
-#define  x_HII_ism                      10
-#define  x_H2_cloud                     11
-#define  x_H2_ism                       12
-#define  pl_rho1                        13
-#define  gJET                           14
+#define  jet_window                     7
+#define  gJET                           8
 
 /* [Beg] user-defined constants (do not change this line) */
 
