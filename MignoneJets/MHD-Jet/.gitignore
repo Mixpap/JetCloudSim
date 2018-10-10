@@ -1,0 +1,5 @@
+*.o
+*.ppm
+*.dbl
+*.log
+*.out
