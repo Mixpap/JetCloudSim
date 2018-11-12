@@ -157,7 +157,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 {
   int   i, j, k, nv;
   double  *x1, *x2, *x3;
-  double vj[256];
+  double B0,Rj,Pj,r0,rstar,beta;
 
   //x1 = grid[IDIR].x;
   //x2 = grid[JDIR].x;
@@ -207,8 +207,14 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
                     d->Vc[VX2][k][j][i] = sqrt(1.0-(1.0/(g_inputParam[lorentz_jet]*g_inputParam[lorentz_jet])));
                     d->Vc[BX1][k][j][i] = 0.0;
                     if (g_inputParam[gBphi]==1) {
-                        d->Vc[BX2][k][j][i] = sqrt(2.*g_inputParam[pressure_jet_thermal])/sqrt(0.05) *
-                        (1.+pow(0.04*g_inputParam[jet_window]/+0.2*g_inputParam[jet_window],2))/(0.04*g_inputParam[jet_window]/+0.2*g_inputParam[jet_window]);
+                        Rj=g_inputParam[jet_window];
+                        r0=0.2*Rj;
+                        rstar=0.04*Rj;
+                        Pj=g_inputParam[pressure_jet_thermal];
+                        beta=0.05;
+                        B0=sqrt(2.*Pj)/sqrt(beta) *(1.+pow((rstar/r0),2))/(rstar/r0);
+                        //printf('B0 = ',B0);
+                        d->Vc[BX2][k][j][i] = g_inputParam[lorentz_jet ]*B0*(x2[j]/r0)/(1.+pow((x2[j]/r0),2));
                     } else {
                         d->Vc[BX2][k][j][i] = 0.0;
                     }
