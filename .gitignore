@@ -109,3 +109,5 @@ venv.bak/
 *.ppm
 *.out
 *.npz
+*.h5
+*.xmf
