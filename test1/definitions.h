@@ -9,7 +9,7 @@
 #define  TIME_STEPPING                  RK2
 #define  DIMENSIONAL_SPLITTING          NO
 #define  NTRACER                        0
-#define  USER_DEF_PARAMETERS            9
+#define  USER_DEF_PARAMETERS            10
 
 /* -- physics dependent declarations -- */
 
@@ -26,9 +26,10 @@
 #define  rho_jet                        3
 #define  lorentz_jet                    4
 #define  pressure_gas                   5
-#define  pressure_jet                   6
+#define  pressure_jet_thermal           6
 #define  jet_window                     7
 #define  gJET                           8
+#define  gBphi                          9
 
 /* [Beg] user-defined constants (do not change this line) */
 

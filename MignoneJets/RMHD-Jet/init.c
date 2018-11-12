@@ -4,7 +4,7 @@
   \brief Relativistic magnetized jet in axisymmetric coordinates.
 
   The jet problem is set up in axisymmetric cylindrical coordinates
-  \f$ (r,z) \f$ as described in section 4.2.3 of 
+  \f$ (r,z) \f$ as described in section 4.2.3 of
   Mignone, Ugliano \& Bodo (2009, [MUB09] hereafter).
   We label ambient and jet values with the suffix "a" and "j", respectively.
   The ambient medium is at rest and is characterized by uniform density
@@ -24,8 +24,8 @@
   \end{array}\right. \f]
   Here \c a is the magnetization radius while \f$ v_r = B_r = 0 \f$.
   The pressure distribution is found by solving the radial momentum
-  balance between thermal, centrifugal and magnetic forces. 
-  Neglecting rotation and assuming \c Bz to be constant the solution 
+  balance between thermal, centrifugal and magnetic forces.
+  Neglecting rotation and assuming \c Bz to be constant the solution
   is given by
   \f[
     p(R) = p_j + b_m^2\left[1-\min\left(\frac{r^2}{a^2},1\right)\right]
@@ -35,19 +35,19 @@
 
   The parameters controlling the problem is
   -# <tt>g_inputParam[MACH]</tt>: the jet Mach number
-     \f$ M = v_j/cs \f$ where \f$c_s=\sqrt{\Gamma p_j/(\rho h)}\f$ is 
+     \f$ M = v_j/cs \f$ where \f$c_s=\sqrt{\Gamma p_j/(\rho h)}\f$ is
      the sound speed and \f$\rho h = \rho + \Gamma p_j/(\Gamma-1)\f$.
      This is used to recover \f$p_j\f$;
   -# <tt>g_inputParam[LORENTZ]</tt>:  the jet Lorentz factor;
   -# <tt>g_inpurParam[RHOJ]</tt>: the jet density;
-  -# <tt>g_inpurParam[SIGMA_POL]</tt>: magnetization strength for poloidal 
+  -# <tt>g_inpurParam[SIGMA_POL]</tt>: magnetization strength for poloidal
      magnetic field component (see [MUB09], Eq [65]);
   -# <tt>g_inpurParam[SIGMA_TOR]</tt>: magnetization strength for toroidal
      magnetic field component (see [MUB09], Eq [65]);
 
   The different configurations are:
 
-  - configurations #01-02 employ a purely poloidal field and are similar 
+  - configurations #01-02 employ a purely poloidal field and are similar
     to section 4.3.3 of Mignone \& Bodo (2006);
   - configuration #03
 
@@ -60,7 +60,7 @@
      - "A five-wave Harten-Lax-van Leer Riemann solver for relativistic
         magnetohydrodynamics", Mignone, Ugliano \& Bodo, MNARS (200) 393, 1141
      - "An HLLC Rieman solver for relativistic flows - II. Magnetohydrodynamics"
-        Mignone \& Bodo, MNRAS (2006) 368, 1040   
+        Mignone \& Bodo, MNRAS (2006) 368, 1040
 
   \author A. Mignone (mignone@ph.unito.it)
   \date   March 09, 2017
@@ -110,7 +110,7 @@ void Init (double *v, double x1, double x2, double x3)
   #if NTRACER > 0
    v[TRC] = 0.0;
   #endif
-  #ifdef PSI_GLM 
+  #ifdef PSI_GLM
    v[PSI_GLM] = 0.0;
   #endif
 
@@ -119,7 +119,7 @@ void Init (double *v, double x1, double x2, double x3)
 
 /* ********************************************************************* */
 void InitDomain (Data *d, Grid *grid)
-/*! 
+/*!
  * Assign initial condition by looping over the computational domain.
  * Called after the usual Init() function to assign initial conditions
  * on primitive variables.
@@ -132,7 +132,7 @@ void InitDomain (Data *d, Grid *grid)
 
 /* ********************************************************************* */
 void Analysis (const Data *d, Grid *grid)
-/* 
+/*
  *
  *
  *********************************************************************** */
@@ -141,8 +141,8 @@ void Analysis (const Data *d, Grid *grid)
 }
 
 /* ********************************************************************* */
-void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid) 
-/* 
+void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
+/*
  *
  *
  *********************************************************************** */
@@ -153,13 +153,13 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   double prof, vjet[256], vout[NVAR];
 
   #ifdef STAGGERED_MHD
-   D_EXPAND(bxs = d->Vs[BX1s];  , 
-            bys = d->Vs[BX2s];  , 
+   D_EXPAND(bxs = d->Vs[BX1s];  ,
+            bys = d->Vs[BX2s];  ,
             bzs = d->Vs[BX3s];)
   #endif
 
   x1  = grid->xgc[IDIR];  
-  x2  = grid->xgc[JDIR];  
+  x2  = grid->xgc[JDIR];
   x3  = grid->xgc[KDIR];
 
   if (side == X2_BEG){  /* -- X2_BEG boundary -- */
@@ -168,23 +168,23 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         GetJetValues (x1[i], x2[j], x3[k], vjet); /* Jet Values */
         VAR_LOOP(nv) vout[nv] = d->Vc[nv][k][2*JBEG - j - 1][i]; /* Ambient */
 
-        vout[VX2] *= -1.0; 
-        EXPAND(vout[BX1] *= -1.0;  ,  
-                                ;  , 
+        vout[VX2] *= -1.0;
+        EXPAND(vout[BX1] *= -1.0;  ,
+                                ;  ,
                vout[BX3] *= -1.0;)
         #ifdef PSI_GLM
          vjet[PSI_GLM]  = d->Vc[PSI_GLM][k][JBEG][i] - d->Vc[BX2][k][JBEG][i];
          vout[PSI_GLM] *= -1.0;
         #endif
 
-        prof = (fabs(x1[i]) <= 1.0); 
+        prof = (fabs(x1[i]) <= 1.0);
         VAR_LOOP(nv) d->Vc[nv][k][j][i] = vout[nv] - (vout[nv] - vjet[nv])*prof;
       }
 
     }else if (box->vpos == X1FACE){  /* -- staggered fields -- */
       #ifdef STAGGERED_MHD
        x1 = grid->xr[IDIR];
-       vjet[BX1] = 0.0; 
+       vjet[BX1] = 0.0;
        BOX_LOOP(box,k,j,i){
           vout[BX1] = -bxs[k][2*JBEG - j - 1][i];
           prof = (fabs(x1[i]) <= 1.0);
@@ -201,7 +201,7 @@ void GetJetValues (double x1, double x2, double x3, double *vj)
  *
  *
  *
- * 
+ *
  ****************************************************************** */
 {
   static int  first_call = 1;
@@ -247,7 +247,7 @@ void GetJetValues (double x1, double x2, double x3, double *vj)
   #if NTRACER > 0
    vj[TRC] = 1.0;
   #endif
-  #ifdef PSI_GLM 
+  #ifdef PSI_GLM
    vj[PSI_GLM] = 0.0;
   #endif
 

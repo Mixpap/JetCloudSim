@@ -16,7 +16,7 @@
 /* ///////////////////////////////////////////////////////////////////// */
 #include "pluto.h"
 
-//static void   GetJetValues (double x1, double x2, double x3, double *vj);
+static void   GetJetValues (double x1, double x2, double x3, double *vj);
 
 /* ********************************************************************* */
 void Init (double *v, double x1, double x2, double x3)
@@ -133,6 +133,7 @@ void BackgroundField (double x1, double x2, double x3, double *B0)
 
 /* ********************************************************************* */
 void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
+
 /*!
  *  Assign user-defined boundary conditions.
  *
@@ -156,6 +157,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 {
   int   i, j, k, nv;
   double  *x1, *x2, *x3;
+  double vj[256];
 
   //x1 = grid[IDIR].x;
   //x2 = grid[JDIR].x;
@@ -197,25 +199,41 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         if (box->vpos == CENTER) {
             BOX_LOOP(box,k,j,i){
             if (g_inputParam[gJET]==1) { // Boundary conditions IN THE JET
-                if (fabs(x1[i])<=g_inputParam[jet_window]) {   
+                if (fabs(x1[i])<=g_inputParam[jet_window]) {
+                    //if (fabs(x1[i]) < 1.e-10) x1[i] = 1.e-10;
                     d->Vc[RHO][k][j][i] = g_inputParam[rho_jet];
-                    d->Vc[PRS][k][j][i] = g_inputParam[pressure_jet];
+                    d->Vc[PRS][k][j][i] = g_inputParam[pressure_jet_thermal];
                     d->Vc[VX1][k][j][i] = 0.0;
                     d->Vc[VX2][k][j][i] = sqrt(1.0-(1.0/(g_inputParam[lorentz_jet]*g_inputParam[lorentz_jet])));
+                    d->Vc[BX1][k][j][i] = 0.0;
+                    if (g_inputParam[gBphi]==1) {
+                        d->Vc[BX2][k][j][i] = sqrt(2.*g_inputParam[pressure_jet_thermal])/sqrt(0.05) *
+                        (1.+pow(0.04*g_inputParam[jet_window]/+0.2*g_inputParam[jet_window],2))/(0.04*g_inputParam[jet_window]/+0.2*g_inputParam[jet_window]);
+                    } else {
+                        d->Vc[BX2][k][j][i] = 0.0;
+                    }
+                    //sqrt(2.*g_inputParam[pressure_jet_thermal])/sqrt(0.05) *(1.+pow(0.04*g_inputParam[jet_window]/+0.2*g_inputParam[jet_window],2))/(0.04*g_inputParam[jet_window]/+0.2*g_inputParam[jet_window]);
+                    // d->Vc[BX3][k][j][i] = 0.0;
+                    // d->Vc[AX1][k][j][i] = 0.0;
+                    // d->Vc[AX2][k][j][i] = 0.0;
+                    // d->Vc[AX3][k][j][i] = 0.0;
                 } else {
                     VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
-                  //d->Vc[VX1][k][j][i] = d->Vc[VX1][k][JBEG][i];
-                  //d->Vc[VX2][k][j][i] = d->Vc[VX2][k][JBEG][i];
-                  //d->Vc[PRS][k][j][i] = d->Vc[PRS][k][JBEG][i]; //g_inputParam[pressure_gas];
-                  //d->Vc[RHO][k][j][i] = d->Vc[RHO][k][JBEG][i]; //g_inputParam[rho_ism];
                 }
             } else {
                 VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
             }
     }
-     
+
     }else if (box->vpos == X1FACE){
-      BOX_LOOP(box,k,j,i){  }
+      // #ifdef STAGGERED_MHD
+      //  x1 = grid->xr[IDIR];
+      //  BOX_LOOP(box,k,j,i){
+      //    vout[BX1] = -d->Vs[BX1s][k][2*JBEG - j - 1][i];
+      //    d->Vs[BX1s][k][j][i] =    vout[BX1]
+      //                           - (vout[BX1] - vjet[BX1])*Profile(fabs(x1[i]), BX1);
+      //  }
+      // #endif
     }else if (box->vpos == X2FACE){
       BOX_LOOP(box,k,j,i){  }
     }else if (box->vpos == X3FACE){
@@ -326,3 +344,36 @@ double BodyForcePotential(double x1, double x2, double x3)
 	}
 }
 #endif
+
+/* **************************************************************** */
+void GetJetValues (double x1, double x2, double x3, double *vj)
+/*
+ *
+ *
+ ****************************************************************** */
+{
+  static int  first_call = 1;
+  double lor,r,r0;
+
+  r   = x1;
+  r0 = 0.1* g_inputParam[jet_window];
+  lor = g_inputParam[lorentz_jet];
+  if (fabs(r) < 1.e-10) r = 1.e-10;
+
+  vj[RHO] = g_inputParam[rho_jet];
+
+  EXPAND(vj[VX1] = 0.0;                        ,
+         vj[VX2] = sqrt(1.0 - 1.0/(lor*lor));  , /* 3-vel */
+         vj[VX3] = 0.0;)
+
+  vj[PRS] =  g_inputParam[pressure_jet_thermal];
+  #if GEOMETRY == CYLINDRICAL
+   EXPAND(vj[iBR]   = 0.0;                                 ,
+          vj[iBZ]   = 0.0;  ,
+          vj[iBPHI] = 0.0;)
+   vj[AX1] = 0.0;
+   vj[AX2] = 0.0;
+   vj[AX3] = 0.0; //0.5*r*vj[iBZ];
+  #endif
+
+}
