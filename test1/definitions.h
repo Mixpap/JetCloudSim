@@ -1,6 +1,6 @@
 #define  PHYSICS                        RMHD
 #define  DIMENSIONS                     2
-#define  COMPONENTS                     2
+#define  COMPONENTS                     3
 #define  GEOMETRY                       CYLINDRICAL
 #define  BODY_FORCE                     NO
 #define  FORCED_TURB                    NO
@@ -9,7 +9,7 @@
 #define  TIME_STEPPING                  RK2
 #define  DIMENSIONAL_SPLITTING          NO
 #define  NTRACER                        0
-#define  USER_DEF_PARAMETERS            10
+#define  USER_DEF_PARAMETERS            12
 
 /* -- physics dependent declarations -- */
 
@@ -22,14 +22,16 @@
 
 #define  radius_cloud                   0
 #define  rho_ism                        1
-#define  rho_cloud                      2
-#define  rho_jet                        3
-#define  lorentz_jet                    4
-#define  pressure_gas                   5
-#define  pressure_jet_thermal           6
-#define  jet_window                     7
-#define  gJET                           8
-#define  gBphi                          9
+#define  cloudx                         2
+#define  cloudy                         3
+#define  rho_jet                        4
+#define  lorentz_jet                    5
+#define  pressure_gas                   6
+#define  pressure_jet_thermal           7
+#define  jet_window                     8
+#define  r0toR                          9
+#define  gJET                          10
+#define  gBphi                         11
 
 /* [Beg] user-defined constants (do not change this line) */
 

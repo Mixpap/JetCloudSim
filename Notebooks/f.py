@@ -87,8 +87,8 @@ def div(F):
 def grad(F):
     return np.sqrt(np.gradient(F)[0]**2+np.gradient(F)[1]**2)
 
-def quadruple(d,VAR,tdk='Myrs',Save_Figure='',cl='',nn=0,mspeed='km',rows=2,cols=2,xlim=[None,None],
-              ylim=[None,None],datafolder='Images/'):
+def quadruple(d,VAR,tdk='Myrs',Save_Figure='',cl='',nn=0,mspeed='km',rows=2,cols=2,scale=(6,6),xlim=[None,None],
+              ylim=[None,None],zlim=[None,None],color='viridis',datafolder='Images/'):
     """
     Plot a rows(=2) x cols(=2) Variable
     """
@@ -97,7 +97,7 @@ def quadruple(d,VAR,tdk='Myrs',Save_Figure='',cl='',nn=0,mspeed='km',rows=2,cols
     Vy=d['Vy'] if nn>0 else 0
     T=np.linspace(0,d['T'].shape[0]-1,rows*cols,dtype=int)
     fig, axes = plt.subplots(nrows=rows, ncols=cols, sharex=True, sharey=True,
-                            figsize=(cols*5,rows*5))
+                            figsize=(cols*scale[0],rows*scale[1]))
     td=1e3 if tdk=='kyrs' else 1e6
     for i,ax in enumerate(axes.flat):
         ext=[X.min(),X.max(),Y.min(),Y.max()]
@@ -106,8 +106,10 @@ def quadruple(d,VAR,tdk='Myrs',Save_Figure='',cl='',nn=0,mspeed='km',rows=2,cols
         label = '{:.1f} {}'.format(d['T'][T[i]]/td,tdk)
         ax.set_title(label,fontsize=20)
         ax.grid(False)
-        pc = ax.imshow(VAR[:,:,T[i]].T,cmap='viridis',origin='lower',aspect='equal',
-                       extent=ext,vmin=VAR.min(),vmax=VAR.max())
+        zmin=VAR.min() if zlim[0]==None else zlim[0]
+        zmax=VAR.max() if zlim[1]==None else zlim[1]
+        pc = ax.imshow(VAR[:,:,T[i]].T,cmap=color,origin='lower',aspect='equal',
+                       extent=ext,vmin=zmin,vmax=zmax)
         if nn>0:
             k=nn #distance from boundaries for first/last arrows
             sc=2. if mspeed =='max' else 5. if mspeed == 'c' else 1e-4

@@ -17,6 +17,7 @@ Vx=D.vx1
 Vy=D.vx2 if 'vx2' in D.vars else 0.
 Bx=D.Bx1 if 'Bx1' in D.vars else 0.
 By=D.Bx2 if 'Bx2' in D.vars else 0.
+Bz=D.Bx3 if 'Bx3' in D.vars else 0.
 x_HI=D.X_HI if 'X_HI' in D.vars else 0.
 x_HII=D.X_HII if 'X_HII' in D.vars else 0
 x_H2=D.X_H2 if 'X_H2' in D.vars else 0
@@ -31,13 +32,14 @@ for t in range(1,nlinf['nlast']):
 	Vy=np.dstack((Vy,D.vx2))
 	Bx=np.dstack((Bx,D.Bx1)) if 'Bx1' in D.vars else 0.
 	By=np.dstack((By,D.Bx2)) if 'Bx2' in D.vars else 0.
+	Bz=np.dstack((Bz,D.Bx3)) if 'Bx3' in D.vars else 0.
 	x_HI=np.dstack((x_HI,D.X_HI)) if 'X_HI' in D.vars else 0.
 	x_HII=np.dstack((x_HII,D.X_HII)) if 'X_HII' in D.vars else 0.
 	x_H2=np.dstack((x_H2,D.X_H2)) if 'X_H2' in D.vars else 0.
 	TMP=np.dstack((TMP,D.tmp)) if 'tmp' in D.vars else 0.
 	T=np.append(T,D.SimTime)
 
-np.savez_compressed(outdir,RHO=RHO,PRS=PRS,Vx=Vx,Vy=Vy,Bx=Bx,By=By,X=X,Y=Y,
+np.savez_compressed(outdir,RHO=RHO,PRS=PRS,Vx=Vx,Vy=Vy,Bx=Bx,By=By,Bz=Bz,X=X,Y=Y,
 x_HI=x_HI,x_HII=x_HII,x_H2=x_H2,TMP=TMP,T=T*t0*second_to_yrs)
-print nlinf['time'],nlinf['nlast'],T[-1]
+print(nlinf['time'],nlinf['nlast'],T[-1])
 #T=np.linspace(0.,nlinf['time'],nlinf['nlast'])*t0*second_to_yrs

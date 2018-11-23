@@ -16,6 +16,9 @@
 /* ///////////////////////////////////////////////////////////////////// */
 #include "pluto.h"
 
+static void   GetJetValues (double x1, double x2, double x3, double *vj);
+static double Profile (double, double);
+
 /* ********************************************************************* */
 void Init (double *v, double x1, double x2, double x3)
 /*!
@@ -44,100 +47,50 @@ void Init (double *v, double x1, double x2, double x3)
  *
  *********************************************************************** */
 {
-  g_gamma=5.0/3.0;
+      g_gamma=5.0/3.0;
 
-  v[RHO] = g_inputParam[rho_ism];
-  v[VX1] = 0.0;
-  v[VX2] = 0.0;
-  v[VX3] = 0.0;
-  #if HAVE_ENERGY
-   v[PRS] = g_inputParam[pressure_gas];
-  #endif
-  v[TRC] = 0.0;
 
-  /* one cloud */
-  double rs,A,B;
-  A=10.0;
-  B=0.002;
-  
-  rs=sqrt(x1*x1+x2*x2);
-  if (rs<g_inputParam[radius_cloud]) {
-  	// Plummer Profile
-  	v[RHO]=A/(B+pow(rs,2.3));
-  }
-  
+      /* -- ISM values ---- */
+      v[RHO] = g_inputParam[rho_ism];
+      EXPAND(v[VX1] = 0.0; ,
+             v[VX2] = 0.0; ,
+             v[VX3] = 0.0; )
+      #if HAVE_ENERGY
+      v[PRS] = g_inputParam[pressure_gas];
+      #endif
+      v[TRC] = 0.0;
 
-	  /* Multiple Clouds (experimental) 
-	  int nn;
-	  double x1c, x2c,x1_min,x2_min,x1_max,x2_max;
-	  x1_min=-3.0;
-	  x1_max=3.0;
-	  x2_min=-3.0;
-	  x2_max=3.0;
+      /* one cloud */
+      double rs,A,B,r0,z0;
+      A=10.0;
+      B=0.002;
 
-	  //for (nn=1; nn<2; nn=nn+1) {
-		
-	  	x1c=(x1_max-x1_min)*(float)rand()/RAND_MAX+x1_min;
-	  	x2c=(x2_max-x2_min)*(float)rand()/RAND_MAX+x2_min;
-	        //printf("%d %f %f\n",nn,x1c,x2c );
-	        rs=sqrt((x1-x1c)*(x1-x1c)+(x2-x2c)*(x2-x2c));
-	  	if (rs<g_inputParam[radius_cloud]) {
-			   // Plummer Profile
-  			v[RHO]=A/(B+pow(rs,1.3));
-		  }
-	  //}
-	  */
-  #if PHYSICS == MHD || PHYSICS == RMHD
+      rs=sqrt((x1-g_inputParam[cloudx])*(x1-g_inputParam[cloudx])+(x2-g_inputParam[cloudy])*(x2-g_inputParam[cloudy]));
+      if (rs<g_inputParam[radius_cloud]) {
+        // Plummer Profile
+        v[RHO]=A/(B+pow(rs,2.3));
+      }
 
-   v[BX1] = 0.0;
-   v[BX2] = 0.0;
-   v[BX3] = 0.0;
 
-   v[AX1] = 0.0;
-   v[AX2] = 0.0;
-   v[AX3] = 0.0;
+      #if PHYSICS == MHD || PHYSICS == RMHD
 
-  #endif
+       v[BX1] = 0.0;
+       v[BX2] = 0.0;
+       v[BX3] = 0.0;
+
+       v[AX1] = 0.0;
+       v[AX2] = 0.0;
+       v[AX3] = 0.0;
+
+      #endif
 }
 
-/* ********************************************************************* */
-void InitDomain (Data *d, Grid *grid)
-/*!
- * Assign initial condition by looping over the computational domain.
- * Called after the usual Init() function to assign initial conditions
- * on primitive variables.
- * Value assigned here will overwrite those prescribed during Init().
- *
- *
- *********************************************************************** */
-{
-}
 
-/* ********************************************************************* */
-void Analysis (const Data *d, Grid *grid)
-/*!
- *  Perform runtime data analysis.
- *
- * \param [in] d the PLUTO Data structure
- * \param [in] grid   pointer to array of Grid structures
- *
- *********************************************************************** */
-{
-
-}
+void InitDomain (Data *d, Grid *grid){}
+void Analysis (const Data *d, Grid *grid){}
 #if PHYSICS == MHD
 /* ********************************************************************* */
 void BackgroundField (double x1, double x2, double x3, double *B0)
-/*!
- * Define the component of a static, curl-free background
- * magnetic field.
- *
- * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
- * \param [in] x2  position in the 2nd coordinate direction \f$x_2\f$
- * \param [in] x3  position in the 3rd coordinate direction \f$x_3\f$
- * \param [out] B0 array containing the vector componens of the background
- *                 magnetic field
- *********************************************************************** */
 {
    B0[0] = 0.0;
    B0[1] = 0.0;
@@ -147,33 +100,10 @@ void BackgroundField (double x1, double x2, double x3, double *B0)
 
 /* ********************************************************************* */
 void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
-/*!
- *  Assign user-defined boundary conditions.
- *
- * \param [in,out] d  pointer to the PLUTO data structure containing
- *                    cell-centered primitive quantities (d->Vc) and
- *                    staggered magnetic fields (d->Vs, when used) to
- *                    be filled.
- * \param [in] box    pointer to a RBox structure containing the lower
- *                    and upper indices of the ghost zone-centers/nodes
- *                    or edges at which data values should be assigned.
- * \param [in] side   specifies the boundary side where ghost zones need
- *                    to be filled. It can assume the following
- *                    pre-definite values: X1_BEG, X1_END,
- *                                         X2_BEG, X2_END,
- *                                         X3_BEG, X3_END.
- *                    The special value side == 0 is used to control
- *                    a region inside the computational domain.
- * \param [in] grid  pointer to an array of Grid structures.
- *
- *********************************************************************** */
 {
   int   i, j, k, nv;
   double  *x1, *x2, *x3;
-
-  //x1 = grid[IDIR].x;
-  //x2 = grid[JDIR].x;
-  //x3 = grid[KDIR].x;
+  double B0,B,P,Rj,Pj,r0,rstar,beta;
 
   x1 = grid->xgc[IDIR];  /* -- array pointer to x1 coordinate -- */
   x2 = grid->xgc[JDIR];  /* -- array pointer to x2 coordinate -- */
@@ -207,41 +137,42 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     }
   }
 
-  if (side == X2_BEG){  /* -- X2_BEG boundary -- */
-    if (box->vpos == CENTER) {
-      BOX_LOOP(box,k,j,i){
-	//printf("%f %f \n",x1[i],x2[j]);
-	if (g_inputParam[gJET]==1) {
-          // Boundary conditions IN THE JET
-          if (fabs(x1[i])<=g_inputParam[jet_window]) {
-          //if ((i<129) && (i>127)) {    
-              d->Vc[RHO][k][j][i] = g_inputParam[rho_jet];
-              d->Vc[PRS][k][j][i] = g_inputParam[pressure_jet];
-              d->Vc[VX1][k][j][i] = 0.0;
-              d->Vc[VX2][k][j][i] = sqrt(1.0-(1.0/(g_inputParam[lorentz_jet]*g_inputParam[lorentz_jet])));
-	  }else{
-	      VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
-	      //d->Vc[VX1][k][j][i] = d->Vc[VX1][k][JBEG][i];
-	      //d->Vc[VX2][k][j][i] = d->Vc[VX2][k][JBEG][i];
-	      //d->Vc[PRS][k][j][i] = d->Vc[PRS][k][JBEG][i]; //g_inputParam[pressure_gas];
-	      //d->Vc[RHO][k][j][i] = d->Vc[RHO][k][JBEG][i]; //g_inputParam[rho_ism];
-	  }
-	
-		//VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
-		//d->Vc[VX2][k][j][i] = 0.8*exp(-x1[i]*x1[i]/(2.*0.01*0.01));
-	
-	}else{
-	  d->Vc[VX1][k][j][i] = d->Vc[VX1][k][JBEG][i];
-	  d->Vc[VX2][k][j][i] = d->Vc[VX2][k][JBEG][i];
-	  d->Vc[PRS][k][j][i] = d->Vc[PRS][k][JBEG][i]; //g_inputParam[pressure_gas];
-	  d->Vc[RHO][k][j][i] = d->Vc[RHO][k][JBEG][i]; //g_inputParam[rho_ism];
-	}
-	
-      //printf("%f %f\n",x1[i],d->Vc[VX2][k][j][i]);
-      }
-     
+    if (side == X2_BEG){  /* -- X2_BEG boundary -- */
+        if (box->vpos == CENTER) {
+            BOX_LOOP(box,k,j,i){
+            if (g_inputParam[gJET]==1) { // Boundary conditions IN THE JET
+                if (fabs(x1[i])<=g_inputParam[jet_window]) {
+                    //if (fabs(x1[i]) < 1.e-10) x1[i] = 1.e-10;
+                    d->Vc[RHO][k][j][i] = g_inputParam[rho_jet];
+
+                    d->Vc[VX1][k][j][i] = 0.0;
+                    d->Vc[VX2][k][j][i] = sqrt(1.0-(1.0/(g_inputParam[lorentz_jet]*g_inputParam[lorentz_jet])));
+                    d->Vc[BX1][k][j][i] = 0.0;
+                    d->Vc[BX2][k][j][i] = 0.0;
+                    Pj=g_inputParam[pressure_jet_thermal];
+                    if (g_inputParam[gBphi]==1) {
+                        Rj=g_inputParam[jet_window];
+                        r0=g_inputParam[r0toR]*Rj;
+                        B0=sqrt(2.*Pj*(1.0+(Rj/r0)*(Rj/r0)));
+                        B=-1.0*g_inputParam[lorentz_jet ]*B0*(x1[i]/r0)/(1.0+pow((x1[i]/r0),2));
+                        //printf('B0 = ',B0);
+                        d->Vc[BX3][k][j][i] = B;
+                        P=B0*B0/pow((2.0*(1.0+(x1[i]/r0)*(x1[i]/r0))),2); //+B*B/(2.*g_inputParam[lorentz_jet])*(1.0 -  MIN(x1[i]*x1[i],1.0));
+                        if (P<1e-13) P=1e-13;
+                        d->Vc[PRS][k][j][i] = P;
+                    } else {
+                        d->Vc[BX3][k][j][i] = 0.0;
+                        d->Vc[PRS][k][j][i] = Pj;
+                    }
+                } else {
+                    VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
+                }
+            } else {
+                VAR_LOOP(nv) d->Vc[nv][k][j][i] = d->Vc[nv][k][JBEG][i];
+            }
+    }
+
     }else if (box->vpos == X1FACE){
-      BOX_LOOP(box,k,j,i){  }
     }else if (box->vpos == X2FACE){
       BOX_LOOP(box,k,j,i){  }
     }else if (box->vpos == X3FACE){
@@ -286,69 +217,52 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   }
 }
 
-#if BODY_FORCE != NO
-/* ********************************************************************* */
-void BodyForceVector(double *v, double *g, double x1, double x2, double x3)
-/*!
- * Prescribe the acceleration vector as a function of the coordinates
- * and the vector of primitive variables *v.
+
+
+/* **************************************************************** */
+void GetJetValues (double x1, double x2, double x3, double *vj)
+/*
  *
- * \param [in] v  pointer to a cell-centered vector of primitive
- *                variables
- * \param [out] g acceleration vector
- * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
- * \param [in] x2  position in the 2nd coordinate direction \f$x_2\f$
- * \param [in] x3  position in the 3rd coordinate direction \f$x_3\f$
+ *
+ ****************************************************************** */
+{
+  static int  first_call = 1;
+  double lor,r,r0;
+
+  r   = x1;
+  r0 = 0.1* g_inputParam[jet_window];
+  lor = g_inputParam[lorentz_jet];
+  if (fabs(r) < 1.e-10) r = 1.e-10;
+
+  vj[RHO] = g_inputParam[rho_jet];
+
+  EXPAND(vj[VX1] = 0.0;                        ,
+         vj[VX2] = sqrt(1.0 - 1.0/(lor*lor));  , /* 3-vel */
+         vj[VX3] = 0.0;)
+
+  vj[PRS] =  g_inputParam[pressure_jet_thermal];
+  #if GEOMETRY == CYLINDRICAL
+   EXPAND(vj[iBR]   = 0.0;                                 ,
+          vj[iBZ]   = 0.0;  ,
+          vj[iBPHI] = 0.0;)
+   vj[AX1] = 0.0;
+   vj[AX2] = 0.0;
+   vj[AX3] = 0.0; //0.5*r*vj[iBZ];
+  #endif
+
+}
+
+/* ********************************************************************* */
+double Profile (double R, double nv)
+/*
+ *
  *
  *********************************************************************** */
 {
-	double M,rs,G,A;
-	rs=sqrt(x1*x1+x2*x2);
-	G=1.114e-13;
-	A=g_inputParam[pl_rho1]*7.39198;
-	if (rs>g_inputParam[radius_cloud]) {
-	  M=A*pow(g_inputParam[radius_cloud],1.7);
-	  g[IDIR] = -G*M*x1/rs/rs/rs;
-	  g[JDIR] = -G*M*x2/rs/rs/rs;
-	  g[KDIR] = 0.0;
-	}
-	else {
-	  M=A*pow(rs,1.7);
-	  g[IDIR]= -G*M*x1/rs/rs/rs;
-	  g[JDIR]= -G*M*x2/rs/rs/rs;
-	  g[KDIR]= 0.0;
+  double R4 = R*R*R*R, R8 = R4*R4;
 
-	}
-}
-/* ********************************************************************* */
-double BodyForcePotential(double x1, double x2, double x3)
-/*!
- * Return the gravitational potential as function of the coordinates.
- *
- * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
- * \param [in] x2  position in the 2nd coordinate direction \f$x_2\f$
- * \param [in] x3  position in the 3rd coordinate direction \f$x_3\f$
- *
- * \return The body force potential \f$ \Phi(x_1,x_2,x_3) \f$.
- *
- *********************************************************************** */
-{
-    	double M,A,rs,G;
-	rs=sqrt(x1*x1+x2*x2);
-	G=1.114e-13;
-
-	A=g_inputParam[pl_rho1]*7.39198;  //Power-Law Density Profile Integration
-	//A=(4.0/3.0)*3.14156*g_inputParam[rho_cloud] //Box Density Profile Integration
-
-	if (rs>g_inputParam[radius_cloud]) {
-	  M=A*pow(g_inputParam[radius_cloud],1.7); //Power-Law Density Profile Integration
-	  //M=A*pow(g_inputParam[radius_cloud],3); //Box Density Profile Integration
-	  return -G*M/rs;
-	}
-	else {
-	  M=A*pow(rs,1.7); //Power-Law Density Profile Integration
-	  //M=A*pow(rs,3); //Box Density Profile Integration
-	  return -G*M/rs;
-	}
-}
+#if PHYSICS == MHD && COMPONENTS == 3    /* Start with a smoother profile */
+  if (g_time < 0.1)  return 1.0/cosh(R4); /* with toroidal magnetic fields */
 #endif
+  return 1.0/cosh(R8);
+}
