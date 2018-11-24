@@ -111,3 +111,4 @@ venv.bak/
 *.npz
 *.h5
 *.xmf
+*.gif
