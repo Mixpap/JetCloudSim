@@ -85,19 +85,7 @@ void Init (double *v, double x1, double x2, double x3)
       #endif
 }
 
-/* ********************************************************************* */
-void InitDomain (Data *d, Grid *grid)
-/*! 
- * Assign initial condition by looping over the computational domain.
- * Called after the usual Init() function to assign initial conditions
- * on primitive variables.
- * Value assigned here will overwrite those prescribed during Init().
- *
- *
- *********************************************************************** */
-{
-}
-
+void InitDomain (Data *d, Grid *grid){}
 void Analysis (const Data *d, Grid *grid){}
 #if PHYSICS == MHD
 /* ********************************************************************* */

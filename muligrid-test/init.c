@@ -98,7 +98,9 @@ void InitDomain (Data *d, Grid *grid)
 {
 }
 
-void Analysis (const Data *d, Grid *grid){}
+void Analysis (const Data *d, Grid *grid)
+{
+}
 #if PHYSICS == MHD
 /* ********************************************************************* */
 void BackgroundField (double x1, double x2, double x3, double *B0)

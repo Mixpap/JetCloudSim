@@ -4,7 +4,7 @@
 #define  GEOMETRY                       CYLINDRICAL
 #define  BODY_FORCE                     NO
 #define  FORCED_TURB                    NO
-#define  COOLING                        TABULATED
+#define  COOLING                        NO
 #define  RECONSTRUCTION                 LINEAR
 #define  TIME_STEPPING                  RK2
 #define  DIMENSIONAL_SPLITTING          NO
