@@ -112,5 +112,6 @@ venv.bak/
 *.h5
 *.xmf
 *.gif
+*.npy
 #*.jpg
 #*.png
