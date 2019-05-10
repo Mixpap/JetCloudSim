@@ -31,10 +31,9 @@ wdir=cwd+'/'
 outdir=cwd[cwd.rfind('/')+1:]
 sim=np.load('{}.npz'.format(outdir))
 print('Loaded Simulation of size {}'.format(sim['RHO'].shape))
-PU=sim['PU']
-print('Loaded simulation units')
-
-for var in ['RHO','TMP','Vz','Bphi']:
+PU=sim['PU'];print('Loaded simulation units')
+sim
+for var in ['RHO','TMP','Vy','Vx']:
     print('{}: min={:.2e} mean={:.2e} max={:.2e}'.format(var,sim[var].min(),sim[var].mean(),sim[var].max()))
 V=np.sqrt(sim['Vz']**2+sim['Vr']**2+sim['Vphi']**2)
 gamma=1./np.sqrt(1.-V**2); print('Gamma min:{:.2f} mean:{:.2f} max:{:.2f}'.format(gamma.min(),gamma.mean(),gamma.max()))

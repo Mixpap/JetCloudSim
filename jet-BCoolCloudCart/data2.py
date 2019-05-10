@@ -45,22 +45,22 @@ print('Making Pluto Units (PU) for L0 = {} / rho0= {} / v0 ={}'.format(L0,rho0,v
 
 gauss_B = (u.g/u.cm)**(0.5)/u.s
 equiv_B = [(u.G, gauss_B, lambda x: x, lambda x: x)]
-PU={'rho':rho0,
-    'vx1':v0,
-    'vx2':v0,
-    'vx3':v0,
+PU={'RHO':rho0,
+    'Vx1':v0,
+    'Vx2':v0,
+    'Vx3':v0,
     'Bx1':(v0*np.sqrt(4.*np.pi*rho0)).to(u.G,equivalencies=equiv_B),
     'Bx2':(v0*np.sqrt(4.*np.pi*rho0)).to(u.G,equivalencies=equiv_B),
     'Bx3':(v0*np.sqrt(4.*np.pi*rho0)).to(u.G,equivalencies=equiv_B),
-    'prs':(rho0*v0**2).to(u.Ba),
-    'tmp':(v0**2*m_p/k_B).cgs,
+    'PRS':(rho0*v0**2).to(u.Ba),
+    'TMP':(v0**2*m_p/k_B).cgs,
     'T':(L0/v0).cgs,
     'L':(L0).cgs}
 
 cwd=os.getcwd()
 wdir=cwd+'/'
 outdir=cwd[cwd.rfind('/')+1:]
-d=1
+d=2
 start=0
 end=Nbl
 A=np.fromfile("data.{:04d}.dbl".format(start))
@@ -68,6 +68,7 @@ B=A.reshape((simvars.shape[0],YY.shape[0],XX.shape[0]))
 M={var:B[start,:,:] for start,var in enumerate(simvars)}
 TT=np.array(TTall[start])
 for idbl in range(start+1,end,d):
+	print('Loading dbl file {} at time {}'.format(idbl,TTall[idbl]))
     A=np.fromfile("data.{:04d}.dbl".format(idbl))
     B=A.reshape((simvars.shape[0],YY.shape[0],XX.shape[0]))
     #M=np.dstack((M,{var:B[i,:,:]*PU[var] for i,var in enumerate(simvars)}))
@@ -76,11 +77,11 @@ for idbl in range(start+1,end,d):
 
 RHO= np.array([M[i]['rho'] for i,t in enumerate(TT)])#*PU['rho']
 PRS= np.array([M[i]['prs'] for i,t in enumerate(TT)])#*PU['prs']
-Br= np.array([M[i]['Bx1'] for i,t in enumerate(TT)])#*PU['Bx1']
-Bz= np.array([M[i]['Bx2'] for i,t in enumerate(TT)])#*PU['Bx2']
-Bphi= np.array([M[i]['Bx3'] for i,t in enumerate(TT)])#*PU['Bx3']
+Bx= np.array([M[i]['Bx1'] for i,t in enumerate(TT)])#*PU['Bx1']
+By= np.array([M[i]['Bx2'] for i,t in enumerate(TT)])#*PU['Bx2']
+Bz= np.array([M[i]['Bx3'] for i,t in enumerate(TT)])#*PU['Bx3']
 TMP= np.array([M[i]['tmp'] for i,t in enumerate(TT)])#*PU['tmp']
-Vr=np.array([M[i]['vx1'] for i,t in enumerate(TT)])#*PU['vx1']
-Vz=np.array([M[i]['vx2'] for i,t in enumerate(TT)])#*PU['vx2']
-Vphi=np.array([M[i]['vx3'] for i,t in enumerate(TT)])#*PU['vx3']
-np.savez_compressed(outdir,RHO=RHO,PRS=PRS,Br=Br,Bz=Bz,Bphi=Bphi,TMP=TMP,Vr=Vr,Vz=Vz,Vphi=Vphi,T=TT,X=XX,Y=YY,PU=PU)
+Vx=np.array([M[i]['vx1'] for i,t in enumerate(TT)])#*PU['vx1']
+Vy=np.array([M[i]['vx2'] for i,t in enumerate(TT)])#*PU['vx2']
+Vz=np.array([M[i]['vx3'] for i,t in enumerate(TT)])#*PU['vx3']
+np.savez_compressed(outdir,RHO=RHO,PRS=PRS,Bx=Bx,By=By,Bz=Bz,TMP=TMP,Vx=Vx,Vy=Vy,Vz=Vz,T=TT,X=XX,Y=YY,PU=PU)
